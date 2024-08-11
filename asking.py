@@ -22,7 +22,7 @@ class ServerCheckThread(QThread):
                     self.status_changed.emit(True)
             except Exception:
                 self.status_changed.emit(False)
-            QThread.sleep(1)  # 5초마다 상태 확인
+            QThread.sleep(1)  # 1초마다 상태 확인
 
     def stop(self):
         self.running = False
@@ -57,7 +57,7 @@ class MainWindow(QMainWindow):
         self.tray_icon.show()
 
         self.setWindowTitle('Card Game Client')
-        self.setGeometry(100, 100, 400, 200)
+        self.setGeometry(100, 100, 380, 200)
         self.setStyleSheet("background-color: #1E1F22;")
         self.card_on_hand = []
         self.initUI()
@@ -131,11 +131,11 @@ class MainWindow(QMainWindow):
         try:
             client_socket.send(request.encode('utf-8'))
             while True:
-                print("entering while to get response")
                 response = client_socket.recv(1024).decode('utf-8')
                 if not response:
                     print("dont response")
                     break
+                return response
         except Exception as e:
             return f'Error: {e}'
 
@@ -146,11 +146,10 @@ class MainWindow(QMainWindow):
     def register_nickname(self):
 
         nickname = self.nickname_input.text()
-        print("im working")
         if not nickname:
             self.error_message.setText('사용자명을 입력')
             return
-        if len(nickname) > 10:
+        if len(nickname) > 15:
             self.error_message.setText('너무 긴 사용자명')
             return
         print("before resister")
@@ -171,7 +170,8 @@ class MainWindow(QMainWindow):
             # Start Redis subscriber thread after successful registration
 
         else:
-            self.error_message.setText(response)
+            mes_dict=json.loads(response)
+            self.error_message.setText(mes_dict['message'])
 
         # self.debug_message_label.setText(f"{response}")
 
@@ -229,6 +229,7 @@ class MainWindow(QMainWindow):
         nickname = self.current_username
 
         if self.current_action == 'queue':
+            print("before queue")
             self.action_button.setEnabled(False)
             # Queue 관련 기능 구현
             response = self.claim_queue(nickname)
